@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+package smartify.geofence;
+option go_package = "./pb";
+
+// A single point on the map represented by latitude and longitude.
+message Point {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+// A polygon represented as a series of points.
+message Polygon {
+  string id = 1;               // Unique identifier for this polygon
+  string name = 2;             // Friendly name for this polygon
+  repeated Point vertices = 3; // Vertices of the polygon
+}
+
+// Request message to add one or more polygons for filtering.
+message AddPolygonsRequest {
+  repeated Polygon polygons = 1; // The polygons to be added
+}
+
+// A single location represented by latitude and longitude, along with the ID of the polygon it belongs to.
+message Location {
+  double latitude = 1;
+  double longitude = 2;
+  string polygon_id = 3; // The ID of the polygon this location falls within.
+}
+
+// The streaming response containing locations within polygons.
+message FilteredLocations {
+  repeated Location locations = 1; // The filtered locations within the polygons.
+}
+
+// The service definition.
+service GeoFenceService {
+  // Add polygons to the geo-fence for tracking.
+  rpc AddPolygons(AddPolygonsRequest) returns (google.protobuf.Empty);
+
+  // A server-side streaming RPC for sending filtered location data.
+  rpc StreamFilteredLocations(google.protobuf.Empty) returns (stream FilteredLocations);
+}
