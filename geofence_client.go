@@ -2,21 +2,22 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net"
 	"time"
 
 	"github.com/smartify-software/smart-iot/pb" // replace with the actual package
 	"google.golang.org/grpc"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 type GeoFenceClient struct {
-	client pb.GeoFenceServiceClient
+	client pb.GeoFenceLabelingServerClient
 }
 
-func NewGeoFenceClient(cc *grpc.ClientConn) *GeoFenceClient {
-	return &GeoFenceClient{
-		client: pb.NewGeoFenceServiceClient(cc),
-	}
+func NewGeoFenceClient(client *grpc.ClientConn) *GeoFenceClient {
+	return &GeoFenceClient{client: pb.NewGeoFenceLabelingServerClient(client)}
 }
 
 func (gfc *GeoFenceClient) AddPolygons() {
@@ -45,7 +46,7 @@ func (gfc *GeoFenceClient) AddPolygons() {
 
 	req := &pb.AddPolygonsRequest{Polygons: polygons}
 
-	_, err := gfc.client.AddPolygons(context.Background(), req)
+	_, err := gfc.client.AddPolygonsForGeoFencing(context.Background(), req)
 	if err != nil {
 		log.Fatalf("Could not add polygons: %v", err)
 	}
@@ -54,7 +55,7 @@ func (gfc *GeoFenceClient) AddPolygons() {
 }
 
 func (gfc *GeoFenceClient) StreamFilteredLocations() {
-	stream, err := gfc.client.StreamFilteredLocations(context.Background(), &pb.Empty{})
+	stream, err := gfc.client.StreamFencedLocations(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("Error while opening stream: %v", err)
 	}
@@ -69,7 +70,29 @@ func (gfc *GeoFenceClient) StreamFilteredLocations() {
 	}
 }
 
+func StartServer() {
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
+	repo := &InMemoryGeoFenceRepository{Polygons: make(map[string]*pb.Polygon)}
+	server := grpc.NewServer()
+	geoFenceServer := NewGeoFenceServer(repo)
+
+	pb.RegisterGeoFenceLabelingServerServer(server, geoFenceServer)
+
+	fmt.Println("GeoFenceService running on :50051")
+	if err := server.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
+}
+
 func main() {
+	go StartServer()
+
+	time.Sleep(2 * time.Second)
+
 	cc, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)

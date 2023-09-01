@@ -19,39 +19,39 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// GeoFenceServiceClient is the client API for GeoFenceService service.
+// GeoFenceLabelingServerClient is the client API for GeoFenceLabelingServer service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type GeoFenceServiceClient interface {
+type GeoFenceLabelingServerClient interface {
 	// Add polygons to the geo-fence for tracking.
-	AddPolygons(ctx context.Context, in *AddPolygonsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// A server-side streaming RPC for sending filtered location data.
-	StreamFilteredLocations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (GeoFenceService_StreamFilteredLocationsClient, error)
+	AddPolygonsForGeoFencing(ctx context.Context, in *AddPolygonsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// A server-side streaming RPC for sending fenced locations.
+	StreamFencedLocations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (GeoFenceLabelingServer_StreamFencedLocationsClient, error)
 }
 
-type geoFenceServiceClient struct {
+type geoFenceLabelingServerClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewGeoFenceServiceClient(cc grpc.ClientConnInterface) GeoFenceServiceClient {
-	return &geoFenceServiceClient{cc}
+func NewGeoFenceLabelingServerClient(cc grpc.ClientConnInterface) GeoFenceLabelingServerClient {
+	return &geoFenceLabelingServerClient{cc}
 }
 
-func (c *geoFenceServiceClient) AddPolygons(ctx context.Context, in *AddPolygonsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *geoFenceLabelingServerClient) AddPolygonsForGeoFencing(ctx context.Context, in *AddPolygonsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/smartify.geofence.GeoFenceService/AddPolygons", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/geofence.GeoFenceLabelingServer/AddPolygonsForGeoFencing", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *geoFenceServiceClient) StreamFilteredLocations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (GeoFenceService_StreamFilteredLocationsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &GeoFenceService_ServiceDesc.Streams[0], "/smartify.geofence.GeoFenceService/StreamFilteredLocations", opts...)
+func (c *geoFenceLabelingServerClient) StreamFencedLocations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (GeoFenceLabelingServer_StreamFencedLocationsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &GeoFenceLabelingServer_ServiceDesc.Streams[0], "/geofence.GeoFenceLabelingServer/StreamFencedLocations", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &geoFenceServiceStreamFilteredLocationsClient{stream}
+	x := &geoFenceLabelingServerStreamFencedLocationsClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -61,112 +61,113 @@ func (c *geoFenceServiceClient) StreamFilteredLocations(ctx context.Context, in 
 	return x, nil
 }
 
-type GeoFenceService_StreamFilteredLocationsClient interface {
-	Recv() (*FilteredLocations, error)
+type GeoFenceLabelingServer_StreamFencedLocationsClient interface {
+	Recv() (*FencedLocation, error)
 	grpc.ClientStream
 }
 
-type geoFenceServiceStreamFilteredLocationsClient struct {
+type geoFenceLabelingServerStreamFencedLocationsClient struct {
 	grpc.ClientStream
 }
 
-func (x *geoFenceServiceStreamFilteredLocationsClient) Recv() (*FilteredLocations, error) {
-	m := new(FilteredLocations)
+func (x *geoFenceLabelingServerStreamFencedLocationsClient) Recv() (*FencedLocation, error) {
+	m := new(FencedLocation)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-// GeoFenceServiceServer is the server API for GeoFenceService service.
-// All implementations must embed UnimplementedGeoFenceServiceServer
+// GeoFenceLabelingServerServer is the server API for GeoFenceLabelingServer service.
+// All implementations must embed UnimplementedGeoFenceLabelingServerServer
 // for forward compatibility
-type GeoFenceServiceServer interface {
+type GeoFenceLabelingServerServer interface {
 	// Add polygons to the geo-fence for tracking.
-	AddPolygons(context.Context, *AddPolygonsRequest) (*emptypb.Empty, error)
-	// A server-side streaming RPC for sending filtered location data.
-	StreamFilteredLocations(*emptypb.Empty, GeoFenceService_StreamFilteredLocationsServer) error
-	mustEmbedUnimplementedGeoFenceServiceServer()
+	AddPolygonsForGeoFencing(context.Context, *AddPolygonsRequest) (*emptypb.Empty, error)
+	// A server-side streaming RPC for sending fenced locations.
+	StreamFencedLocations(*emptypb.Empty, GeoFenceLabelingServer_StreamFencedLocationsServer) error
+	mustEmbedUnimplementedGeoFenceLabelingServerServer()
 }
 
-// UnimplementedGeoFenceServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedGeoFenceServiceServer struct {
+// UnimplementedGeoFenceLabelingServerServer must be embedded to have forward compatible implementations.
+type UnimplementedGeoFenceLabelingServerServer struct {
 }
 
-func (UnimplementedGeoFenceServiceServer) AddPolygons(context.Context, *AddPolygonsRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddPolygons not implemented")
+func (UnimplementedGeoFenceLabelingServerServer) AddPolygonsForGeoFencing(context.Context, *AddPolygonsRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddPolygonsForGeoFencing not implemented")
 }
-func (UnimplementedGeoFenceServiceServer) StreamFilteredLocations(*emptypb.Empty, GeoFenceService_StreamFilteredLocationsServer) error {
-	return status.Errorf(codes.Unimplemented, "method StreamFilteredLocations not implemented")
+func (UnimplementedGeoFenceLabelingServerServer) StreamFencedLocations(*emptypb.Empty, GeoFenceLabelingServer_StreamFencedLocationsServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamFencedLocations not implemented")
 }
-func (UnimplementedGeoFenceServiceServer) mustEmbedUnimplementedGeoFenceServiceServer() {}
+func (UnimplementedGeoFenceLabelingServerServer) mustEmbedUnimplementedGeoFenceLabelingServerServer() {
+}
 
-// UnsafeGeoFenceServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to GeoFenceServiceServer will
+// UnsafeGeoFenceLabelingServerServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to GeoFenceLabelingServerServer will
 // result in compilation errors.
-type UnsafeGeoFenceServiceServer interface {
-	mustEmbedUnimplementedGeoFenceServiceServer()
+type UnsafeGeoFenceLabelingServerServer interface {
+	mustEmbedUnimplementedGeoFenceLabelingServerServer()
 }
 
-func RegisterGeoFenceServiceServer(s grpc.ServiceRegistrar, srv GeoFenceServiceServer) {
-	s.RegisterService(&GeoFenceService_ServiceDesc, srv)
+func RegisterGeoFenceLabelingServerServer(s grpc.ServiceRegistrar, srv GeoFenceLabelingServerServer) {
+	s.RegisterService(&GeoFenceLabelingServer_ServiceDesc, srv)
 }
 
-func _GeoFenceService_AddPolygons_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _GeoFenceLabelingServer_AddPolygonsForGeoFencing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddPolygonsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GeoFenceServiceServer).AddPolygons(ctx, in)
+		return srv.(GeoFenceLabelingServerServer).AddPolygonsForGeoFencing(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/smartify.geofence.GeoFenceService/AddPolygons",
+		FullMethod: "/geofence.GeoFenceLabelingServer/AddPolygonsForGeoFencing",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GeoFenceServiceServer).AddPolygons(ctx, req.(*AddPolygonsRequest))
+		return srv.(GeoFenceLabelingServerServer).AddPolygonsForGeoFencing(ctx, req.(*AddPolygonsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GeoFenceService_StreamFilteredLocations_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _GeoFenceLabelingServer_StreamFencedLocations_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(emptypb.Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(GeoFenceServiceServer).StreamFilteredLocations(m, &geoFenceServiceStreamFilteredLocationsServer{stream})
+	return srv.(GeoFenceLabelingServerServer).StreamFencedLocations(m, &geoFenceLabelingServerStreamFencedLocationsServer{stream})
 }
 
-type GeoFenceService_StreamFilteredLocationsServer interface {
-	Send(*FilteredLocations) error
+type GeoFenceLabelingServer_StreamFencedLocationsServer interface {
+	Send(*FencedLocation) error
 	grpc.ServerStream
 }
 
-type geoFenceServiceStreamFilteredLocationsServer struct {
+type geoFenceLabelingServerStreamFencedLocationsServer struct {
 	grpc.ServerStream
 }
 
-func (x *geoFenceServiceStreamFilteredLocationsServer) Send(m *FilteredLocations) error {
+func (x *geoFenceLabelingServerStreamFencedLocationsServer) Send(m *FencedLocation) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-// GeoFenceService_ServiceDesc is the grpc.ServiceDesc for GeoFenceService service.
+// GeoFenceLabelingServer_ServiceDesc is the grpc.ServiceDesc for GeoFenceLabelingServer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var GeoFenceService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "smartify.geofence.GeoFenceService",
-	HandlerType: (*GeoFenceServiceServer)(nil),
+var GeoFenceLabelingServer_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "geofence.GeoFenceLabelingServer",
+	HandlerType: (*GeoFenceLabelingServerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddPolygons",
-			Handler:    _GeoFenceService_AddPolygons_Handler,
+			MethodName: "AddPolygonsForGeoFencing",
+			Handler:    _GeoFenceLabelingServer_AddPolygonsForGeoFencing_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "StreamFilteredLocations",
-			Handler:       _GeoFenceService_StreamFilteredLocations_Handler,
+			StreamName:    "StreamFencedLocations",
+			Handler:       _GeoFenceLabelingServer_StreamFencedLocations_Handler,
 			ServerStreams: true,
 		},
 	},
