@@ -23,6 +23,16 @@ func NewGeoFenceClient(client *grpc.ClientConn) *GeoFenceClient {
 func (gfc *GeoFenceClient) AddPolygons() {
 	polygons := []*pb.Polygon{
 		{
+			Id:   "0",
+			Name: "WashingtonDC_BoundingBox",
+			Vertices: []*pb.Point{
+				{Latitude: 38.8072, Longitude: -77.1369}, // Southwest corner
+				{Latitude: 38.8072, Longitude: -76.9369}, // Southeast corner
+				{Latitude: 39.0072, Longitude: -76.9369}, // Northeast corner
+				{Latitude: 39.0072, Longitude: -77.1369}, // Northwest corner
+			},
+		},
+		{
 			Id:   "1",
 			Name: "Polygon1",
 			Vertices: []*pb.Point{

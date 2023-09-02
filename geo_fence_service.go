@@ -62,8 +62,9 @@ func GetRandomLocation() chan *pb.Location {
 	ch := make(chan *pb.Location)
 	go func() {
 		for {
-			lat := randomNoise(80)  // Random latitude around San Francisco, for example
-			long := randomNoise(80) // Random longitude around San Francisco, for example
+			// washington DC 38.9072° N, 77.0369° W
+			lat := randomNoise(50)  // Random latitude around San Francisco, for example
+			long := randomNoise(50) // Random longitude around San Francisco, for example
 			location := &pb.Location{Latitude: lat, Longitude: long}
 			ch <- location
 			time.Sleep(1 * time.Second)
